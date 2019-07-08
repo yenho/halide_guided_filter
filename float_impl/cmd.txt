@@ -1,0 +1,12 @@
+clang++ -O3 -fno-rtti -std=c++11 -o gf_generator gf_generator.cpp $HALIDE_ROOT/tools/GenGen.cpp -I ../include/ -L ../bin/ -lHalide -ltinfo -lpthread -ldl
+./aot_gen.sh
+clang++ -fno-rtti -std=c++11 -O3 -o gf_test gf.cpp aot/guided_filter.a aot/fast_guided_filter.a -L ../bin -I ../include -I aot -I $HALIDE_ROOT/tools -lraw -lpthread -ldl -ljpeg -ltinfo -lpng
+
+== PC ==
+clang++ -O3 -fno-rtti -std=c++11 -o gf_generator gf_generator.cpp /home/champ/workspace/Halide//tools/GenGen.cpp -I ../include/ -L ../bin/ -lHalide -ltinfo -lpthread -ldl; ./aot_gen.sh arm-32-android-armv7s android; ./aot_gen.sh
+clang++ -fno-rtti -std=c++11 -O3 -o gf_test gf.cpp aot/guided_filter.a aot/fast_guided_filter.a -L ../bin -I ../include -I aot -I $HALIDE_ROOT/tools -lraw -lpthread -ldl -ljpeg -ltinfo -lpng; ./gf_test
+
+== ADB ==
+adb push lena.png /data/local/tmp
+cd android
+ndk-build clean; ndk-build -j8;adb push libs/armeabi-v7a/gf_test data/local/tmp; adb shell "cd /data/local/tmp; chmod 755 gf_test; ./gf_test"; adb pull /data/local/tmp/output_fast.png; adb pull /data/local/tmp/output.png
