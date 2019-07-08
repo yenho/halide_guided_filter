@@ -85,7 +85,7 @@ public:
                 a_b.hexagon().compute_root()
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
                     .parallel(yo).vectorize(xi, 128);
-                sums_x.compute_at(a_b, Var::outermost())
+                sums_x.compute_at(a_b, yo)
                     .vectorize(x, 128);
                 /*
                 mean_ab_x.hexagon().compute_root()
@@ -95,7 +95,7 @@ public:
                 out.hexagon()
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
                     .parallel(yo).vectorize(xi, 128);
-                mean_ab_x.compute_at(out, Var::outermost())
+                mean_ab_x.compute_at(out, yo)
                     .vectorize(x, 128);
             }
         }
