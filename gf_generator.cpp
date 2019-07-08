@@ -82,20 +82,20 @@ public:
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
                     .parallel(yo).vectorize(xi, 128);
                     */ 
-                a_b.hexagon().compute_root()
+                a_b.hexagon().compute_root().fold_storage(y, 8)
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
                     .parallel(yo).vectorize(xi, 128, TailStrategy::RoundUp);
-                sums_x.hexagon().compute_at(a_b, yo)
+                sums_x.hexagon().compute_at(a_b, xo).fold_storage(y, 8)
                     .vectorize(x, 128, TailStrategy::RoundUp);
                 /*
                 mean_ab_x.hexagon().compute_root()
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
                     .parallel(yo).vectorize(xi, 128);
                     */
-                out.hexagon()
+                out.hexagon().fold_storage(y, 8)
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
                     .parallel(yo).vectorize(xi, 128, TailStrategy::RoundUp);
-                mean_ab_x.hexagon().compute_at(out, yo)
+                mean_ab_x.hexagon().compute_at(out, xo).fold_storage(y, 8)
                     .vectorize(x, 128, TailStrategy::RoundUp);
             }
         }
