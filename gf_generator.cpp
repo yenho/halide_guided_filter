@@ -42,7 +42,7 @@ public:
         Expr var_I = (box[2] - box[0]*box[0]);
         Expr cov_IP = (box[3] - box[0]*box[1]);
 
-        //Expr a = cov_IP/((var_I + eps) >> 7);
+        //Expr a = u16((u32(cov_IP)<<7)/(var_I + eps));
         Expr a = u16(u32(cov_IP) * div_map((var_I + eps) >> 7) >> DIV_Q);
         Expr b = i16((box[1]<<7)) - a*box[0];
         a_b(x, y) = Tuple(u16(a), i16(b));
