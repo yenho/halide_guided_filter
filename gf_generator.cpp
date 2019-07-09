@@ -75,34 +75,28 @@ public:
         else{
             printf("Generate Hexagon\n");
             if (get_target().has_feature(Halide::Target::HVX_128)) {
-                Var xo, yo, xi, yi;
+                Var tidx, xo, yo, xi, yi;
                 div_map.store_in(MemoryType::LockedCache);
-                /*
-                sums_x.hexagon().compute_root()
+
+                a_b.hexagon().compute_root().fold_storage(y, 16)
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
-                    .parallel(yo).vectorize(xi, 128);
-                    */ 
-                a_b.hexagon().compute_root().fold_storage(y, 8)
-                    .tile(x, y, xo, yo, xi, yi, 128, 32)
-                    .parallel(yo).vectorize(xi, 128, TailStrategy::RoundUp);
-                sums_x.hexagon().compute_at(a_b, xo).fold_storage(y, 8)
+                    .fuse(xo, yo, tidx)
+                    .parallel(tidx).vectorize(xi, 128, TailStrategy::RoundUp);
+                sums_x.hexagon().compute_at(a_b, tidx).fold_storage(y, 16)
                     .vectorize(x, 128, TailStrategy::RoundUp);
-                /*
-                mean_ab_x.hexagon().compute_root()
-                    .tile(x, y, xo, yo, xi, yi, 128, 32)
-                    .parallel(yo).vectorize(xi, 128);
-                    */
-                out.hexagon().fold_storage(y, 8)
-                    .tile(x, y, xo, yo, xi, yi, 128, 32)
-                    .parallel(yo).vectorize(xi, 128, TailStrategy::RoundUp);
-                mean_ab_x.hexagon().compute_at(out, xo).fold_storage(y, 8)
-                    .vectorize(x, 128, TailStrategy::RoundUp);
+
+                out.hexagon().fold_storage(y, 16)
+                    .tile(x, y, xo, yo, xi, yi, 256, 32)
+                    .fuse(xo, yo, tidx)
+                    .parallel(tidx).vectorize(xi, 256, TailStrategy::RoundUp);
+                mean_ab_x.hexagon().compute_at(out, tidx).fold_storage(y, 16)
+                    .vectorize(x, 256, TailStrategy::RoundUp);
             }
         }
     }
 private:
     Var x, y;
-    Func div_map, in_I, in_P, sums_x, a_b, mean_ab, mean_ab_x;
+    Func div_map, in_I, in_P, sums_x, a_b, mean_ab_x;
 };
 HALIDE_REGISTER_GENERATOR(GuidedFilter, guided_filter);
 
