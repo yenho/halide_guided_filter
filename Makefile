@@ -11,9 +11,6 @@ all: gf gf_jit divmap_gen gf_generator
 gf: gf.cpp aot/guided_filter.a aot/guided_filter.h
 	$(CXX) $(CXX_FLAGS) -I aot -o gf gf.cpp aot/guided_filter.a  $(CXX_GF_LIBS)
 
-gf_ocl: gf.cpp aot_ocl/guided_filter.a aot_ocl/guided_filter.h
-	$(CXX) $(CXX_FLAGS) -D_AOT_OCL_ -I aot -o gf gf.cpp aot_ocl/guided_filter.a  $(CXX_GF_LIBS)
-
 divmap_gen: divmap_gen.cpp
 	$(CXX) -o divmap_gen divmap_gen.cpp
 
@@ -25,9 +22,6 @@ android_gf: gf.cpp aot_ndk_arm64/guided_filter.a aot_ndk_arm64/guided_filter.h
 
 android_hvx_gf: gf.cpp aot_ndk_arm64_hvx/guided_filter.a aot_ndk_arm64_hvx/guided_filter.h
 	$(NDK_CXX) $(CXX_FLAGS) -D_AOT_HVX_ -I aot_ndk_arm64_hvx -o android_hvx_gf gf.cpp aot_ndk_arm64_hvx/guided_filter.a  $(NDK_CXX_GF_LIBS)
-
-aot_ocl/guided_filter.a: gf_generator
-	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot_ocl auto_schedule=false target=host-opencl
 
 aot/guided_filter.a: gf_generator
 	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot auto_schedule=false target=host	
