@@ -24,7 +24,7 @@ android_hvx_gf: gf.cpp aot_ndk_arm64_hvx/guided_filter.a aot_ndk_arm64_hvx/guide
 	$(NDK_CXX) $(CXX_FLAGS) -D_AOT_HVX_ -I aot_ndk_arm64_hvx -o android_hvx_gf gf.cpp aot_ndk_arm64_hvx/guided_filter.a  $(NDK_CXX_GF_LIBS)
 
 aot/guided_filter.a: gf_generator
-	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot auto_schedule=false target=host	
+	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot auto_schedule=true target=host	
 
 aot_ndk_arm64_hvx/guided_filter.a: gf_generator
 	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot_ndk_arm64_hvx auto_schedule=false target=arm-64-android-hvx_64

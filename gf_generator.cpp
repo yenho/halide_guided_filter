@@ -74,8 +74,8 @@ public:
         }
         else{
             Var tidx, xo, yo, xi, yi;
-            printf("Generate Hexagon\n");
             if (get_target().has_feature(Halide::Target::HVX_128)) {
+                printf("Generate Hexagon\n");
                 div_map.store_in(MemoryType::LockedCache);
 
                 a_b.hexagon().compute_root().fold_storage(y, 16)
