@@ -6,7 +6,9 @@
 using namespace Halide;
 using namespace Halide::ConciseCasts;
 
-class GuidedFilter : public Generator<GuidedFilter> 
+#define USE_DIV_OP 0
+
+class GuidedFilter : public Generator<GuidedFilter>
 {
 public:
     Input<Buffer<uint8_t>> input_I{"input_I", 2};
@@ -33,24 +35,39 @@ public:
         Expr corr_IP = sum(u32(val_I*val_P));
 
         sums_x(x, y) = Tuple(mean_I, mean_P, corr_I, corr_IP);
-        Tuple box = Tuple( 
-                            u16( (sum(u32(sums_x(x, y+r)[0]))*div_factor) >> DIV_Q), 
-                            u16( (sum(u32(sums_x(x, y+r)[1]))*div_factor) >> DIV_Q), 
-                            u16( (sum(sums_x(x, y+r)[2])*div_factor) >> DIV_Q ), 
+        Tuple box = Tuple(
+                            #if USE_DIV_OP
+                            u16( sum(u32(sums_x(x, y+r)[0]))/area),
+                            u16( sum(u32(sums_x(x, y+r)[1]))/area),
+                            u16( sum(sums_x(x, y+r)[2])/area ),
+                            u16( sum(sums_x(x, y+r)[3])/area )
+                            #else
+                            u16( (sum(u32(sums_x(x, y+r)[0]))*div_factor) >> DIV_Q),
+                            u16( (sum(u32(sums_x(x, y+r)[1]))*div_factor) >> DIV_Q),
+                            u16( (sum(sums_x(x, y+r)[2])*div_factor) >> DIV_Q ),
                             u16( (sum(sums_x(x, y+r)[3])*div_factor) >> DIV_Q )
+                            #endif
                         );
         Expr var_I = (box[2] - box[0]*box[0]);
         Expr cov_IP = (box[3] - box[0]*box[1]);
 
-        //Expr a = u16((u32(cov_IP)<<7)/(var_I + eps));
+        #if USE_DIV_OP
+        Expr a = u16((u32(cov_IP)<<7)/(var_I + eps));
+        #else
         Expr a = u16(u32(cov_IP) * div_map((var_I + eps) >> 7) >> DIV_Q);
+        #endif
         Expr b = i16((box[1]<<7)) - a*box[0];
         a_b(x, y) = Tuple(u16(a), i16(b));
 
         mean_ab_x(x, y) = Tuple( u32(sum(a_b(x+r, y)[0])), sum(i32(a_b(x+r, y)[1])) );
-        Tuple mean_ab = Tuple( 
-                            u16(clamp((sum(mean_ab_x(x, y+r)[0])*div_factor) >> DIV_Q, 0, 0xFFFF)), 
-                            i16( (sum(mean_ab_x(x, y+r)[1])*div_factor) >> DIV_Q) 
+        Tuple mean_ab = Tuple(
+                            #if USE_DIV_OP
+                            u16(clamp((sum(mean_ab_x(x, y+r)[0])/area), 0, 0xFFFF)),
+                            i16(sum(mean_ab_x(x, y+r)[1])/area)
+                            #else
+                            u16(clamp((sum(mean_ab_x(x, y+r)[0])*div_factor) >> DIV_Q, 0, 0xFFFF)),
+                            i16( (sum(mean_ab_x(x, y+r)[1])*div_factor) >> DIV_Q)
+                            #endif
                         );
         out(x, y) = u8((mean_ab[0]*in_I(x, y) + mean_ab[1]) >> 7);
     }
