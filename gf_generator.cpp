@@ -14,8 +14,8 @@ public:
     Input<Buffer<uint8_t>> input_I{"input_I", 2};
     Input<Buffer<uint8_t>> input_P{"input_P", 2};
     Input<Buffer<uint16_t>> div_tab{"div_tab", 1};
-    Input<int32_t> rad{"radius"};
-    Input<int32_t> eps{"eps"};
+    Input<int16_t> rad{"radius"};
+    Input<int16_t> eps{"eps"};
     Output<Buffer<uint8_t>> out{"out", 2};
 
     void generate(){
@@ -48,13 +48,13 @@ public:
                             u16( (sum(sums_x(x, y+r)[3])*div_factor) >> DIV_Q )
                             #endif
                         );
-        Expr var_I = (box[2] - box[0]*box[0]);
+        Expr var_I = (box[2] - box[0]*box[0]) + u16(eps);
         Expr cov_IP = (box[3] - box[0]*box[1]);
 
         #if USE_DIV_OP
-        Expr a = u16((u32(cov_IP)<<7)/(var_I + eps));
+        Expr a = u16((u32(cov_IP)<<7)/var_I);
         #else
-        Expr a = u16(u32(cov_IP) * div_map((var_I + eps) >> 7) >> DIV_Q);
+        Expr a = u16(u32(cov_IP) * div_map(var_I  >> (7 + (9-DIV_BITS))) >> DIV_Q);
         #endif
         Expr b = i16((box[1]<<7)) - a*box[0];
         a_b(x, y) = Tuple(u16(a), i16(b));
@@ -79,7 +79,7 @@ public:
             input_I.dim(1).set_bounds_estimate(0, 3072);
             input_P.dim(0).set_bounds_estimate(0, 4096);
             input_P.dim(1).set_bounds_estimate(0, 3072);
-            div_tab.dim(0).set_bounds_estimate(0, 512);
+            div_tab.dim(0).set_bounds_estimate(0, DIV_TAB_SIZE);
 
             // 2. parameters : parm.set_estimate(VALUE)
             rad.set_estimate(5);
@@ -93,7 +93,10 @@ public:
             Var tidx, xo, yo, xi, yi;
             if (get_target().has_feature(Halide::Target::HVX_128)) {
                 printf("Generate Hexagon\n");
-                div_map.store_in(MemoryType::LockedCache);
+                div_map.hexagon().bound(x, 0, DIV_TAB_SIZE)
+                    .compute_root()
+                    .store_in(MemoryType::LockedCache)
+                    .vectorize(x);
 
                 a_b.hexagon().compute_root().fold_storage(y, 16)
                     .tile(x, y, xo, yo, xi, yi, 128, 32)

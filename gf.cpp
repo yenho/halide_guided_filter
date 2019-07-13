@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         int h = atoi(argv[4]);
         Buffer<uint8_t> in_I(nullptr, w, h);
         Buffer<uint8_t> in_P(nullptr, w, h);
-        Buffer<uint16_t> div_map(nullptr, 512);
+        Buffer<uint16_t> div_map(nullptr, DIV_TAB_SIZE);
         Buffer<uint8_t> output(nullptr, w, h);
 
         #ifdef __HVX__
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
             fclose(fptr);
 
             fptr = fopen(argv[2], "rb");
-            fread(div_map.data(), sizeof(uint16_t), 512, fptr);
+            fread(div_map.data(), sizeof(uint16_t), DIV_TAB_SIZE, fptr);
             fclose(fptr);
         }
 

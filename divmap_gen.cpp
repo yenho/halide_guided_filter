@@ -5,12 +5,13 @@
 int main(void)
 {
     FILE *fptr = fopen("divmap.bin", "wb");
-    unsigned short divmap[512];
+    unsigned short divmap[DIV_TAB_SIZE];
     divmap[0] = (1 << DIV_Q);
-    for(int i = 1; i < 512; i++){
-        divmap[i] = (1 << DIV_Q) / i;
+    int shift = (9 - DIV_BITS);
+    for(int i = 1; i < DIV_TAB_SIZE; i++){
+        divmap[i] = (1 << DIV_Q) / (i << shift);
     }
-    fwrite(divmap, 1, 512*sizeof(unsigned short), fptr);
+    fwrite(divmap, 1, DIV_TAB_SIZE*sizeof(unsigned short), fptr);
     fclose(fptr);
     return 0;
 }
