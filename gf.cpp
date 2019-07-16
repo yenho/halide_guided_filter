@@ -43,7 +43,7 @@ int main(int argc, char** argv)
         Buffer<uint16_t> div_map(nullptr, DIV_TAB_SIZE);
         Buffer<uint8_t> output(nullptr, w, h);
 
-        #ifdef __HVX__
+        #ifdef _AOT_HVX_
         printf("ANDROID HEXAGON buffer allocation\n");
         in_I.device_malloc(halide_hexagon_device_interface());
         in_P.device_malloc(halide_hexagon_device_interface());
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         int rad = atoi(argv[5]);
         int eps = atoi(argv[6]);
 
-        #ifdef __HVX__
+        #ifdef _AOT_HVX_
         // To avoid the cost of powering HVX on in each call of the
         // pipeline, power it on once now. Also, set Hexagon performance to turbo.
         halide_hexagon_set_performance_mode(nullptr, halide_hexagon_power_turbo);
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
         guided_filter(in_I, in_P, div_map, rad, eps, output);
         gettimeofday(&etime, NULL);
 
-        #ifdef __HVX__
+        #ifdef _AOT_HVX_
         // We're done with HVX, power it off, and reset the performance mode
         // to default to save power.
         halide_hexagon_power_hvx_off(nullptr);
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
         }
         #endif
 
-        #ifdef __HVX__
+        #ifdef _AOT_HVX_
         printf("ANDROID HEXAGON buffer release\n");
         in_I.device_free();
         in_P.device_free();

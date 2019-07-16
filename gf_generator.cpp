@@ -91,28 +91,23 @@ public:
         }
         else{
             Var tidx, xo, yo, xi, yi;
-            if (get_target().has_feature(Halide::Target::HVX_128)) {
+            if (get_target().has_feature(Halide::Target::HVX_128) || get_target().has_feature(Halide::Target::HVX_64)) {
                 printf("Generate Hexagon\n");
-                div_map.hexagon().bound(x, 0, DIV_TAB_SIZE)
-                    .compute_root()
-                    .store_in(MemoryType::LockedCache)
-                    .vectorize(x);
+                div_map.hexagon()
+                    .store_in(MemoryType::LockedCache);
 
-                a_b.hexagon().compute_root()
+                a_b.hexagon().compute_root().fold_storage(y, 32)
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
-                    .fuse(xo, yo, tidx).fold_storage(tidx, 16)
-                    .prefetch(in_I, tidx, 2)
-                    .prefetch(in_P, tidx, 2)
+                    .fuse(xo, yo, tidx)
                     .parallel(tidx).vectorize(xi, 128, TailStrategy::RoundUp);
-                sums_x.hexagon().compute_at(a_b, tidx).fold_storage(tidx, 16)
+                sums_x.hexagon().compute_at(a_b, tidx).fold_storage(y, 32)
                     .vectorize(x, 128, TailStrategy::RoundUp);
 
-                out.hexagon()
-                    .tile(x, y, xo, yo, xi, yi, 256, 32)
-                    .fuse(xo, yo, tidx).fold_storage(y, 16)
-                    .prefetch(a_b, tidx, 2)
+                out.hexagon().fold_storage(y, 64)
+                    .tile(x, y, xo, yo, xi, yi, 256, 64)
+                    .fuse(xo, yo, tidx)
                     .parallel(tidx).vectorize(xi, 256, TailStrategy::RoundUp);
-                mean_ab_x.hexagon().compute_at(out, tidx).fold_storage(tidx, 16)
+                mean_ab_x.hexagon().compute_at(out, tidx).fold_storage(y, 64)
                     .vectorize(x, 256, TailStrategy::RoundUp);
             } else {
                 a_b.compute_root()

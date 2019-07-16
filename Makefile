@@ -8,10 +8,10 @@ NDK_CXX_GF_LIBS=-L ../bin/ -ldl -llog
 
 all: gf gf_jit divmap_gen gf_generator
 
-gf: gf.cpp aot/guided_filter.a aot/guided_filter.h
+gf: gf.cpp aot/guided_filter.a aot/guided_filter.h gf_cfg.h
 	$(CXX) $(CXX_FLAGS) -I aot -o gf gf.cpp aot/guided_filter.a  $(CXX_GF_LIBS)
 
-divmap_gen: divmap_gen.cpp
+divmap_gen: divmap_gen.cpp gf_cfg.h
 	$(CXX) -o divmap_gen divmap_gen.cpp
 
 gf_jit: gf_jit.cpp
@@ -27,7 +27,7 @@ aot/guided_filter.a: gf_generator
 	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot auto_schedule=false target=host
 
 aot_ndk_arm64_hvx/guided_filter.a: gf_generator
-	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot_ndk_arm64_hvx auto_schedule=false target=arm-64-android-hvx_64
+	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot_ndk_arm64_hvx auto_schedule=false target=arm-64-android-hvx_128
 
 aot_ndk_arm64/guided_filter.a: gf_generator
 	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot_ndk_arm64 auto_schedule=false target=arm-64-android
@@ -39,7 +39,7 @@ aot_ndk_arm32/guided_filter.a: gf_generator
 	LD_LIBRARY_PATH=../bin/ ./gf_generator -g guided_filter -o ./aot_ndk_arm64 auto_schedule=true target=arm-32-android-hvx_128
 
 
-gf_generator: gf_generator.cpp
+gf_generator: gf_generator.cpp gf_cfg.h
 	$(CXX) $(CXX_FLAGS) -o gf_generator gf_generator.cpp $(HALIDE_ROOT)/tools/GenGen.cpp $(CXX_LIBS)
 
 clean_aot:
