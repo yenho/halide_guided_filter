@@ -117,8 +117,7 @@ public:
                 sums_x.store_at(a_b, tidx).compute_at(a_b, yi)
                     .vectorize(x, 128, TailStrategy::RoundUp);
 
-                out.fold_storage(y, 16)
-                    .tile(x, y, xo, yo, xi, yi, 256, 32)
+                out.tile(x, y, xo, yo, xi, yi, 256, 64)
                     .fuse(xo, yo, tidx)
                     .parallel(tidx).vectorize(xi, 256, TailStrategy::RoundUp);
                 mean_ab_x.compute_at(out, tidx)
