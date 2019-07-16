@@ -98,18 +98,21 @@ public:
                     .store_in(MemoryType::LockedCache)
                     .vectorize(x);
 
-                a_b.hexagon().compute_root().fold_storage(y, 16)
+                a_b.hexagon().compute_root()
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
-                    .fuse(xo, yo, tidx)
+                    .fuse(xo, yo, tidx).fold_storage(tidx, 16)
+                    .prefetch(in_I, tidx, 2)
+                    .prefetch(in_P, tidx, 2)
                     .parallel(tidx).vectorize(xi, 128, TailStrategy::RoundUp);
-                sums_x.hexagon().compute_at(a_b, tidx).fold_storage(y, 16)
+                sums_x.hexagon().compute_at(a_b, tidx).fold_storage(tidx, 16)
                     .vectorize(x, 128, TailStrategy::RoundUp);
 
-                out.hexagon().fold_storage(y, 16)
+                out.hexagon()
                     .tile(x, y, xo, yo, xi, yi, 256, 32)
-                    .fuse(xo, yo, tidx)
+                    .fuse(xo, yo, tidx).fold_storage(y, 16)
+                    .prefetch(a_b, tidx, 2)
                     .parallel(tidx).vectorize(xi, 256, TailStrategy::RoundUp);
-                mean_ab_x.hexagon().compute_at(out, tidx).fold_storage(y, 16)
+                mean_ab_x.hexagon().compute_at(out, tidx).fold_storage(tidx, 16)
                     .vectorize(x, 256, TailStrategy::RoundUp);
             } else {
                 a_b.compute_root()
