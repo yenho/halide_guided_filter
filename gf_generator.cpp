@@ -96,30 +96,45 @@ public:
                 div_map.hexagon()
                     .store_in(MemoryType::LockedCache);
 
-                a_b.hexagon().compute_root().fold_storage(y, 32)
+                a_b.hexagon()
+                    .compute_root()
+                    .fold_storage(y, 32)
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
                     .fuse(xo, yo, tidx)
-                    .parallel(tidx).vectorize(xi, 128, TailStrategy::RoundUp);
-                sums_x.hexagon().compute_at(a_b, tidx).fold_storage(y, 32)
+                    .prefetch(input_I, tidx, 4)
+                    .prefetch(input_P, tidx, 4)
+                    .parallel(tidx)
+                    .vectorize(xi, 128, TailStrategy::RoundUp);
+                sums_x.hexagon()
+                    .compute_at(a_b, tidx)
+                    .fold_storage(y, 32)
+                    .align_storage(x, 128)
                     .vectorize(x, 128, TailStrategy::RoundUp);
 
-                out.hexagon().fold_storage(y, 64)
+                out.hexagon()
+                    .fold_storage(y, 64)
                     .tile(x, y, xo, yo, xi, yi, 256, 64)
                     .fuse(xo, yo, tidx)
-                    .parallel(tidx).vectorize(xi, 256, TailStrategy::RoundUp);
-                mean_ab_x.hexagon().compute_at(out, tidx).fold_storage(y, 64)
+                    .parallel(tidx)
+                    .vectorize(xi, 256, TailStrategy::RoundUp);
+                mean_ab_x.hexagon()
+                    .compute_at(out, tidx)
+                    .fold_storage(y, 64)
+                    .align_storage(x, 256)
                     .vectorize(x, 256, TailStrategy::RoundUp);
             } else {
                 a_b.compute_root()
                     .tile(x, y, xo, yo, xi, yi, 128, 32)
                     .fuse(xo, yo, tidx)
-                    .parallel(tidx).vectorize(xi, 128, TailStrategy::RoundUp);
-                sums_x.store_at(a_b, tidx).compute_at(a_b, yi)
+                    .parallel(tidx)
+                    .vectorize(xi, 128, TailStrategy::RoundUp);
+                sums_x.compute_at(a_b, tidx)
                     .vectorize(x, 128, TailStrategy::RoundUp);
 
                 out.tile(x, y, xo, yo, xi, yi, 256, 64)
                     .fuse(xo, yo, tidx)
-                    .parallel(tidx).vectorize(xi, 256, TailStrategy::RoundUp);
+                    .parallel(tidx)
+                    .vectorize(xi, 256, TailStrategy::RoundUp);
                 mean_ab_x.compute_at(out, tidx)
                     .vectorize(x, 256, TailStrategy::RoundUp);
             }
