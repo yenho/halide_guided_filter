@@ -14,6 +14,7 @@ adb push divmap.bin /data/local/tmp
 
 adb shell "rm -f /data/local/tmp/out.gray"
 adb push $1 /data/local/tmp
+# ./EXECUTABLE IMAGE DIVMAP WIDTH HEIGHT RADIUS EPS OUTPUT.gray
 adb shell "cd /data/local/tmp; LD_LIBRARY_PATH=./ ./$1 cat.gray divmap.bin 3840 2160 11 0.0122 out.gray"
 adb pull /data/local/tmp/out.gray
 convert -size 3840x2160 -depth 8 out.gray out.png
