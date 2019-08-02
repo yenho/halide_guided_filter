@@ -25,7 +25,7 @@ public:
 
         RDom r(-rad, 2*rad+1);
         Expr area = u16((rad*2+1)*(rad*2+1));
-        Expr div_factor = u32((1<<DIV_Q)/area);
+        Expr div_factor = u32(1<<DIV_F)/area;
 
         Expr val_I = u16(in_I(x+r, y));
         Expr val_P = u16(in_P(x+r, y));
@@ -42,21 +42,21 @@ public:
                             u16( sum(sums_x(x, y+r)[2])/area ),
                             u16( sum(sums_x(x, y+r)[3])/area )
                             #else
-                            u16( (sum(u32(sums_x(x, y+r)[0]))*div_factor) >> DIV_Q),
-                            u16( (sum(u32(sums_x(x, y+r)[1]))*div_factor) >> DIV_Q),
-                            u16( (sum(sums_x(x, y+r)[2])*div_factor) >> DIV_Q ),
-                            u16( (sum(sums_x(x, y+r)[3])*div_factor) >> DIV_Q )
+                            u16( (sum(u32(sums_x(x, y+r)[0]))*div_factor) >> DIV_F),
+                            u16( (sum(u32(sums_x(x, y+r)[1]))*div_factor) >> DIV_F),
+                            u16( (sum(sums_x(x, y+r)[2])*div_factor) >> DIV_F ),
+                            u16( (sum(sums_x(x, y+r)[3])*div_factor) >> DIV_F )
                             #endif
                         );
         Expr var_I = (box[2] - box[0]*box[0]) + u16(eps);
         Expr cov_IP = (box[3] - box[0]*box[1]);
 
         #if USE_DIV_OP
-        Expr a = u16((u32(cov_IP)<<7)/var_I);
+        Expr a = u16((u32(cov_IP)<<Q_BITS)/var_I);
         #else
-        Expr a = u16(u32(cov_IP) * div_map(var_I  >> (7 + (9-DIV_BITS))) >> DIV_Q);
+        Expr a = u16(u32(cov_IP) * div_map(var_I  >> (16 - DIV_BITS)) >> DIV_F);
         #endif
-        Expr b = i16((box[1]<<7)) - a*box[0];
+        Expr b = i16((box[1]<<Q_BITS)) - a*box[0];
         a_b(x, y) = Tuple(u16(a), i16(b));
 
         mean_ab_x(x, y) = Tuple( u32(sum(a_b(x+r, y)[0])), sum(i32(a_b(x+r, y)[1])) );
@@ -65,11 +65,11 @@ public:
                             u16(clamp((sum(mean_ab_x(x, y+r)[0])/area), 0, 0xFFFF)),
                             i16(sum(mean_ab_x(x, y+r)[1])/area)
                             #else
-                            u16(clamp((sum(mean_ab_x(x, y+r)[0])*div_factor) >> DIV_Q, 0, 0xFFFF)),
-                            i16( (sum(mean_ab_x(x, y+r)[1])*div_factor) >> DIV_Q)
+                            u16(clamp((sum(mean_ab_x(x, y+r)[0])*div_factor) >> DIV_F, 0, 0xFFFF)),
+                            i16( (sum(mean_ab_x(x, y+r)[1])*div_factor) >> DIV_F)
                             #endif
                         );
-        out(x, y) = u8((mean_ab[0]*in_I(x, y) + mean_ab[1]) >> 7);
+        out(x, y) = u8((mean_ab[0]*in_I(x, y) + mean_ab[1]) >> Q_BITS);
     }
 
     void schedule(){
