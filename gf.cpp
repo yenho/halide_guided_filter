@@ -12,11 +12,6 @@
 #include "HalideBuffer.h"
 using Halide::Runtime::Buffer;
 
-#ifndef __ANDROID__
-#include "halide_image_io.h"
-using namespace Halide::Tools;
-#endif
-
 #include "guided_filter.h"
 
 
@@ -24,18 +19,7 @@ int main(int argc, char** argv)
 {
     struct timeval stime, etime;
     {
-        #if 0
-        Buffer<uint8_t> in_I = Halide::Tools::load_image(argv[1]);
-        Buffer<uint8_t> in_P = Halide::Tools::load_image(argv[2]);
-        Buffer<uint8_t> output(in_I.width(), in_I.height());
-        int rad = atoi(argv[3]);
-        int eps = atoi(argv[4]);
 
-        gettimeofday(&stime, NULL);
-        guided_filter(in_I, in_P, rad, eps, output);
-        gettimeofday(&etime, NULL);
-        save_image(output, argv[5]);
-        #else
         int w = atoi(argv[3]);
         int h = atoi(argv[4]);
         Buffer<uint8_t> in_I(nullptr, w, h);
@@ -44,6 +28,7 @@ int main(int argc, char** argv)
         Buffer<uint8_t> output(nullptr, w, h);
 
         #ifdef _AOT_HVX_
+        // zero-copy buffer
         printf("ANDROID HEXAGON buffer allocation\n");
         in_I.device_malloc(halide_hexagon_device_interface());
         in_P.device_malloc(halide_hexagon_device_interface());
@@ -56,6 +41,7 @@ int main(int argc, char** argv)
         output.allocate();
         #endif
 
+        // read input image, here we use same image for I and P
         {
             FILE *fptr = fopen(argv[1], "rb");
             uint8_t *in_img = (uint8_t*)malloc(w*h);
@@ -78,7 +64,8 @@ int main(int argc, char** argv)
         }
 
         int rad = atoi(argv[5]);
-        int eps = atoi(argv[6]);
+        int eps = atof(argv[6]) * 65536;
+        printf("converted eps %d\n", eps);
 
         #ifdef _AOT_HVX_
         // To avoid the cost of powering HVX on in each call of the
@@ -98,17 +85,16 @@ int main(int argc, char** argv)
         halide_hexagon_set_performance_mode(nullptr, halide_hexagon_power_default);
         #endif
 
+        // save the output image
         {
             FILE *fptr = fopen(argv[7], "wb");
             uint8_t *ptr_out = output.data();
             int stride_out = output.dim(1).stride();
             for(int y = 0; y < h; y++){
-                //memcpy(out_img + y*w, ptr_out + stride_out, w);
                 fwrite(ptr_out + y*stride_out, 1, w, fptr);
             }
             fclose(fptr);
         }
-        #endif
 
         #ifdef _AOT_HVX_
         printf("ANDROID HEXAGON buffer release\n");
