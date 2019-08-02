@@ -15,6 +15,7 @@ gf: gf.cpp aot/guided_filter.a aot/guided_filter.h gf_cfg.h
 
 divmap_gen: divmap_gen.cpp gf_cfg.h
 	$(CXX) -o divmap_gen divmap_gen.cpp
+	./divmap_gen
 
 gf_jit: gf_jit.cpp
 	$(CXX) $(CXX_FLAGS) -o gf_jit gf_jit.cpp $(CXX_LIBS)
@@ -46,4 +47,4 @@ clean_aot:
 	rm -f aot/* aot_ndk_arm64/* aot_ndk_arm32/* aot_ndk_arm64_hvx/*
 
 clean:
-	rm -f divmap_gen gf_jit gf android_gf android_hvx_gf gf_generator 
+	rm -f divmap.bin divmap_gen gf_jit gf android_gf android_hvx_gf gf_generator
