@@ -3,9 +3,9 @@
 adb push android/libc++_shared.so /data/local/tmp
 adb push android/hexagon_lib/libhalide_hexagon_remote_skel.so /data/local/tmp
 # modify here for different signature files
-adb push android/hexagon_lib/testsig-0xd82e3977.so /data/local/tmp
+#adb push android/hexagon_lib/testsig-0xd82e3977.so /data/local/tmp
 # modify here for ADSP or CDSP
-adb push android/hexagon_lib/adsp/libhalide_hexagon_host.so /data/local/tmp
+adb push android/hexagon_lib/cdsp/libhalide_hexagon_host.so /data/local/tmp
 
 # generate .gray file by "convert IMAGE_FILE OUT_PUT.gray"
 adb push cat.gray /data/local/tmp

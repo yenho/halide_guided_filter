@@ -26,6 +26,9 @@ android_gf: gf.cpp aot_ndk_arm64/guided_filter.a aot_ndk_arm64/guided_filter.h
 android_hvx_gf: gf.cpp aot_ndk_arm64_hvx/guided_filter.a aot_ndk_arm64_hvx/guided_filter.h
 	$(NDK_CXX) $(CXX_FLAGS) -D_AOT_HVX_ -I aot_ndk_arm64_hvx -o android_hvx_gf gf.cpp aot_ndk_arm64_hvx/guided_filter.a  $(NDK_CXX_GF_LIBS)
 
+android_hvx-v66_gf: gf.cpp aot_ndk_arm64_hvx/guided_filter.a aot_ndk_arm64_hvx/guided_filter.h
+	$(NDK_CXX) $(CXX_FLAGS) -D_AOT_HVX_ -D_AOT_HVX_V66_ -I aot_ndk_arm64_hvx -I aot_ndk_arm64_hvx/android_ReleaseG_aarch64 -L aot_ndk_arm64_hvx/android_ReleaseG_aarch64 -o android_hvx_gf gf.cpp aot_ndk_arm64_hvx/guided_filter.a  $(NDK_CXX_GF_LIBS) -lcdsprpc
+
 aot/guided_filter.a: gf_generator
 	LD_LIBRARY_PATH=$(HALIDE_BUILD)/bin/ ./gf_generator -g guided_filter -o ./aot auto_schedule=false target=host
 
@@ -47,4 +50,4 @@ clean_aot:
 	rm -f aot/* aot_ndk_arm64/* aot_ndk_arm32/* aot_ndk_arm64_hvx/*
 
 clean:
-	rm -f divmap.bin divmap_gen gf_jit gf android_gf android_hvx_gf gf_generator
+	rm -f divmap.bin divmap_gen gf_jit gf android_gf android_hvx_gf android_hvx-v66_gf gf_generator

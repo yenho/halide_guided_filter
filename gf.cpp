@@ -14,6 +14,9 @@ using Halide::Runtime::Buffer;
 
 #include "guided_filter.h"
 
+#ifdef _AOT_HVX_V66_
+#include "remote64.h"
+#endif
 
 int main(int argc, char** argv)
 {
@@ -28,6 +31,17 @@ int main(int argc, char** argv)
         Buffer<uint8_t> output(nullptr, w, h);
 
         #ifdef _AOT_HVX_
+        #ifdef _AOT_HVX_V66_
+		#pragma weak remote_session_control
+		if (remote_session_control)
+		{
+		    struct remote_rpc_control_unsigned_module data;
+		    data.enable = 1;
+		    data.domain = CDSP_DOMAIN_ID;
+		    remote_session_control(DSPRPC_CONTROL_UNSIGNED_MODULE, (void*)&data, sizeof(data));
+		}
+        #endif
+
         // zero-copy buffer
         printf("ANDROID HEXAGON buffer allocation\n");
         in_I.device_malloc(halide_hexagon_device_interface());
