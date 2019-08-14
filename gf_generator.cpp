@@ -93,8 +93,14 @@ public:
             Var tidx, xo, yo, xi, yi;
             if (get_target().has_feature(Halide::Target::HVX_128) || get_target().has_feature(Halide::Target::HVX_64)) {
                 printf("Generate Hexagon\n");
-                div_map.hexagon()
-                    .store_in(MemoryType::LockedCache);
+                if(get_target().has_feature(Halide::Target::HVX_v66)){
+                    div_map.hexagon()
+                        .store_in(MemoryType::VTCM);
+                }
+                else {
+                    div_map.hexagon()
+                        .store_in(MemoryType::LockedCache);
+                }
 
                 a_b.hexagon()
                     .compute_root()
@@ -105,6 +111,7 @@ public:
                     .prefetch(input_P, tidx, 4)
                     .parallel(tidx)
                     .vectorize(xi, 128, TailStrategy::RoundUp);
+
                 sums_x.hexagon()
                     .compute_at(a_b, tidx)
                     .fold_storage(y, 32)

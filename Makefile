@@ -26,14 +26,18 @@ android_gf: gf.cpp aot_ndk_arm64/guided_filter.a aot_ndk_arm64/guided_filter.h
 android_hvx_gf: gf.cpp aot_ndk_arm64_hvx/guided_filter.a aot_ndk_arm64_hvx/guided_filter.h
 	$(NDK_CXX) $(CXX_FLAGS) -D_AOT_HVX_ -I aot_ndk_arm64_hvx -o android_hvx_gf gf.cpp aot_ndk_arm64_hvx/guided_filter.a  $(NDK_CXX_GF_LIBS)
 
-android_hvx-v66_gf: gf.cpp aot_ndk_arm64_hvx/guided_filter.a aot_ndk_arm64_hvx/guided_filter.h
-	$(NDK_CXX) $(CXX_FLAGS) -D_AOT_HVX_ -D_AOT_HVX_V66_ -I aot_ndk_arm64_hvx -I aot_ndk_arm64_hvx/android_ReleaseG_aarch64 -L aot_ndk_arm64_hvx/android_ReleaseG_aarch64 -o android_hvx_gf gf.cpp aot_ndk_arm64_hvx/guided_filter.a  $(NDK_CXX_GF_LIBS) -lcdsprpc
+android_hvx-v66_gf: gf.cpp aot_ndk_arm64_hvx-v66/guided_filter.a aot_ndk_arm64_hvx-v66/guided_filter.h
+	$(NDK_CXX) $(CXX_FLAGS) -D_AOT_HVX_ -D_AOT_HVX_V66_ -I aot_ndk_arm64_hvx-v66 -I aot_ndk_arm64_hvx-v66/android_ReleaseG_aarch64 -L aot_ndk_arm64_hvx/android_ReleaseG_aarch64 -o android_hvx-v66_gf gf.cpp aot_ndk_arm64_hvx/guided_filter.a  $(NDK_CXX_GF_LIBS) -lcdsprpc
 
 aot/guided_filter.a: gf_generator
 	LD_LIBRARY_PATH=$(HALIDE_BUILD)/bin/ ./gf_generator -g guided_filter -o ./aot auto_schedule=false target=host
 
 aot_ndk_arm64_hvx/guided_filter.a: gf_generator
 	LD_LIBRARY_PATH=$(HALIDE_BUILD)/bin/ ./gf_generator -g guided_filter -o ./aot_ndk_arm64_hvx auto_schedule=false target=arm-64-android-hvx_128
+
+aot_ndk_arm64_hvx-v66/guided_filter.a: gf_generator
+	LD_LIBRARY_PATH=$(HALIDE_BUILD)/bin/ ./gf_generator -g guided_filter -o ./aot_ndk_arm64_hvx-v66 auto_schedule=false target=arm-64-android-hvx_v66-hvx_128
+
 
 aot_ndk_arm64/guided_filter.a: gf_generator
 	LD_LIBRARY_PATH=$(HALIDE_BUILD)/bin/ ./gf_generator -g guided_filter -o ./aot_ndk_arm64 auto_schedule=false target=arm-64-android
